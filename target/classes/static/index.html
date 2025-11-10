@@ -102,20 +102,13 @@
       margin: 20px auto 0;
       text-align: center;
       width: 90%;
+      text-decoration: none;
     }
 
-    .nova-simulacao {
-      background-color: #3b2468;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      margin-top: 15px;
-      display: block;
-      width: 90%;
-      border: none;
-      cursor: pointer;
+    #graficoContainer {
+      margin-top: 30px;
+      display: none;
+      height: 300px;
     }
 
     footer {
@@ -159,7 +152,10 @@
     <button onclick="calcular()">CALCULAR</button>
 
     <div class="resultado" id="resultado"></div>
-    <canvas id="graficoParcelas" style="margin-top:30px; display:none; height:300px;"></canvas>
+
+    <div id="graficoContainer">
+      <canvas id="graficoParcelas"></canvas>
+    </div>
   </div>
 
   <footer>
@@ -189,13 +185,14 @@
         );
 
         if (!resp.ok) throw new Error("Erro HTTP: " + resp.status);
-
         const data = await resp.json();
 
         const primeira = data.parcelas[0];
         const ultima = data.parcelas[data.parcelas.length - 1];
         const mediaParcela = data.parcelas.reduce((a, b) => a + b, 0) / data.parcelas.length;
-        const rendaMinima = mediaParcela / 0.3; // 30% da renda comprometida
+        const rendaMin = mediaParcela / 0.35;
+        const rendaIdeal = mediaParcela / 0.3;
+        const rendaMax = mediaParcela / 0.25;
 
         let html = `
           <h3>Resultado da Simulação</h3>
@@ -204,24 +201,29 @@
           <p><strong>Juros Totais:</strong> R$ ${data.jurosTotais.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <p><strong>Primeira Parcela:</strong> R$ ${primeira.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <p><strong>Última Parcela:</strong> R$ ${ultima.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-          <p><strong>Renda mínima estimada:</strong> R$ ${rendaMinima.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+          <p><strong>Renda recomendada:</strong> entre R$ ${rendaMin.toLocaleString('pt-BR', {minimumFractionDigits: 2})} e R$ ${rendaMax.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+          <p><strong>Renda ideal:</strong> R$ ${rendaIdeal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+
           <div class="aviso">
-            Estes valores são estimados. O valor real das parcelas e a renda necessária podem variar conforme o tipo de financiamento, 
+            Estes valores são estimados. O valor real das parcelas e da renda necessária pode variar conforme o tipo de financiamento, 
             condições de crédito e momento da contratação.
           </div>
+
           <a class="whatsapp-btn" target="_blank"
             href="https://wa.me/5531973307413?text=Olá! Fiz uma simulação de financiamento no site da Gontijo Prime e gostaria de saber o valor exato das parcelas.">
             💬 Falar com um consultor
           </a>
-          <button class="nova-simulacao" onclick="novaSimulacao()">🔄 Nova Simulação</button>
         `;
 
         const resultado = document.getElementById('resultado');
         resultado.innerHTML = html;
         resultado.style.display = 'block';
 
+        // Gráfico
+        const container = document.getElementById('graficoContainer');
         const ctx = document.getElementById('graficoParcelas');
-        ctx.style.display = 'block';
+
+        container.style.display = 'block';
 
         if (graficoAtual) graficoAtual.destroy();
 
@@ -245,30 +247,13 @@
               y: { beginAtZero: false },
               x: { title: { display: true, text: 'Parcela' } }
             },
-            plugins: {
-              legend: { display: false }
-            }
+            plugins: { legend: { display: false } }
           }
         });
 
       } catch (e) {
         console.error("Erro:", e);
         alert("Erro ao calcular financiamento. Verifique os dados.");
-      }
-    }
-
-    function novaSimulacao() {
-      document.getElementById('valorImovel').value = '';
-      document.getElementById('entrada').value = '';
-      document.getElementById('taxaJuros').value = '';
-      document.getElementById('prazo').value = '';
-      document.getElementById('tipo').value = 'PRICE';
-      document.getElementById('resultado').style.display = 'none';
-      document.getElementById('graficoParcelas').style.display = 'none';
-
-      if (graficoAtual) {
-        graficoAtual.destroy();
-        graficoAtual = null;
       }
     }
   </script>
