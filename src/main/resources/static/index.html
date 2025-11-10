@@ -104,6 +104,20 @@
       width: 90%;
     }
 
+    .nova-simulacao {
+      background-color: #3b2468;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 15px;
+      display: block;
+      width: 90%;
+      border: none;
+      cursor: pointer;
+    }
+
     footer {
       text-align: center;
       margin-top: 40px;
@@ -120,7 +134,7 @@
 <body>
   <div class="container">
     <div class="logo">
-      <img src="logo-gontijo-prime.png" alt="Gontijo Prime Imóveis">
+      <img src="https://gontijoprimeimoveis.com.br/wp-content/uploads/2025/11/Asset-1.png" alt="Gontijo Prime Imóveis">
     </div>
     <h1>Simulador de Financiamento Imobiliário</h1>
 
@@ -145,16 +159,18 @@
     <button onclick="calcular()">CALCULAR</button>
 
     <div class="resultado" id="resultado"></div>
-    <canvas id="graficoParcelas" style="margin-top:30px; display:none;"></canvas>
+    <canvas id="graficoParcelas" style="margin-top:30px; display:none; height:300px;"></canvas>
   </div>
 
   <footer>
     © 2025 <strong>Gontijo Prime Imóveis</strong> |  
-    <a href="https://www.instagram.com" target="_blank">Instagram</a> •
+    <a href="https://www.instagram.com/gontijoprimeimoveis" target="_blank">Instagram</a> •
     <a href="https://www.gontijoprimeimoveis.com.br" target="_blank">Site oficial</a>
   </footer>
 
   <script>
+    let graficoAtual = null;
+
     async function calcular() {
       const valorImovel = document.getElementById('valorImovel').value;
       const entrada = document.getElementById('entrada').value;
@@ -178,6 +194,8 @@
 
         const primeira = data.parcelas[0];
         const ultima = data.parcelas[data.parcelas.length - 1];
+        const mediaParcela = data.parcelas.reduce((a, b) => a + b, 0) / data.parcelas.length;
+        const rendaMinima = mediaParcela / 0.3; // 30% da renda comprometida
 
         let html = `
           <h3>Resultado da Simulação</h3>
@@ -186,24 +204,28 @@
           <p><strong>Juros Totais:</strong> R$ ${data.jurosTotais.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <p><strong>Primeira Parcela:</strong> R$ ${primeira.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <p><strong>Última Parcela:</strong> R$ ${ultima.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+          <p><strong>Renda mínima estimada:</strong> R$ ${rendaMinima.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <div class="aviso">
-            Estes valores são estimados. O valor real das parcelas pode variar conforme o tipo de financiamento, 
+            Estes valores são estimados. O valor real das parcelas e a renda necessária podem variar conforme o tipo de financiamento, 
             condições de crédito e momento da contratação.
           </div>
           <a class="whatsapp-btn" target="_blank"
             href="https://wa.me/5531973307413?text=Olá! Fiz uma simulação de financiamento no site da Gontijo Prime e gostaria de saber o valor exato das parcelas.">
             💬 Falar com um consultor
           </a>
+          <button class="nova-simulacao" onclick="novaSimulacao()">🔄 Nova Simulação</button>
         `;
 
         const resultado = document.getElementById('resultado');
         resultado.innerHTML = html;
         resultado.style.display = 'block';
 
-        // Gráfico
         const ctx = document.getElementById('graficoParcelas');
         ctx.style.display = 'block';
-        new Chart(ctx, {
+
+        if (graficoAtual) graficoAtual.destroy();
+
+        graficoAtual = new Chart(ctx, {
           type: 'line',
           data: {
             labels: data.parcelas.map((_, i) => i + 1),
@@ -217,16 +239,36 @@
             }]
           },
           options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
               y: { beginAtZero: false },
               x: { title: { display: true, text: 'Parcela' } }
+            },
+            plugins: {
+              legend: { display: false }
             }
           }
         });
 
       } catch (e) {
-        alert("Erro ao calcular financiamento. Verifique os dados.");
         console.error("Erro:", e);
+        alert("Erro ao calcular financiamento. Verifique os dados.");
+      }
+    }
+
+    function novaSimulacao() {
+      document.getElementById('valorImovel').value = '';
+      document.getElementById('entrada').value = '';
+      document.getElementById('taxaJuros').value = '';
+      document.getElementById('prazo').value = '';
+      document.getElementById('tipo').value = 'PRICE';
+      document.getElementById('resultado').style.display = 'none';
+      document.getElementById('graficoParcelas').style.display = 'none';
+
+      if (graficoAtual) {
+        graficoAtual.destroy();
+        graficoAtual = null;
       }
     }
   </script>
