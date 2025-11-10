@@ -1,0 +1,7 @@
+cd "D:\GONTIJO PRIME IMÓVEIS\ISCAS DIGITAIS\simulador-financiamento"
+
+mvn clean package
+
+mvn spring-boot:run
+
+http://localhost:8080
