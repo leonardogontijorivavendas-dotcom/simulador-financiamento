@@ -3,7 +3,7 @@ services:
     name: simulador-financiamento
     env: docker
     plan: free
+    dockerContext: .
     dockerfilePath: ./Dockerfile
-    envVars:
-      - key: PORT
-        value: 8080
+    autoDeploy: true
+
