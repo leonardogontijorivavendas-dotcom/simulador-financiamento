@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador de Financiamento | Gontijo Prime Imóveis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -72,9 +73,35 @@
     .resultado {
       background: #f4f0ff;
       margin-top: 25px;
-      padding: 15px;
+      padding: 20px;
       border-radius: 10px;
       display: none;
+    }
+
+    .aviso {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #555;
+      text-align: justify;
+      background: #fff8e1;
+      padding: 10px;
+      border-left: 4px solid #ffc107;
+      border-radius: 6px;
+    }
+
+    .whatsapp-btn {
+      background-color: #25d366;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: block;
+      margin: 20px auto 0;
+      text-align: center;
+      width: 90%;
     }
 
     footer {
@@ -118,6 +145,7 @@
     <button onclick="calcular()">CALCULAR</button>
 
     <div class="resultado" id="resultado"></div>
+    <canvas id="graficoParcelas" style="margin-top:30px; display:none;"></canvas>
   </div>
 
   <footer>
@@ -148,17 +176,53 @@
 
         const data = await resp.json();
 
+        const primeira = data.parcelas[0];
+        const ultima = data.parcelas[data.parcelas.length - 1];
+
         let html = `
           <h3>Resultado da Simulação</h3>
           <p><strong>Valor Financiado:</strong> R$ ${data.valorFinanciado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <p><strong>Valor Total Pago:</strong> R$ ${data.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
           <p><strong>Juros Totais:</strong> R$ ${data.jurosTotais.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-          <p><strong>Parcela Fixa (aprox.):</strong> R$ ${data.parcelas[0].toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+          <p><strong>Primeira Parcela:</strong> R$ ${primeira.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+          <p><strong>Última Parcela:</strong> R$ ${ultima.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+          <div class="aviso">
+            Estes valores são estimados. O valor real das parcelas pode variar conforme o tipo de financiamento, 
+            condições de crédito e momento da contratação.
+          </div>
+          <a class="whatsapp-btn" target="_blank"
+            href="https://wa.me/5531973307413?text=Olá! Fiz uma simulação de financiamento no site da Gontijo Prime e gostaria de saber o valor exato das parcelas.">
+            💬 Falar com um consultor
+          </a>
         `;
 
         const resultado = document.getElementById('resultado');
         resultado.innerHTML = html;
         resultado.style.display = 'block';
+
+        // Gráfico
+        const ctx = document.getElementById('graficoParcelas');
+        ctx.style.display = 'block';
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.parcelas.map((_, i) => i + 1),
+            datasets: [{
+              label: 'Valor da Parcela (R$)',
+              data: data.parcelas,
+              borderColor: '#7b3ff3',
+              backgroundColor: 'rgba(123, 63, 243, 0.1)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            scales: {
+              y: { beginAtZero: false },
+              x: { title: { display: true, text: 'Parcela' } }
+            }
+          }
+        });
 
       } catch (e) {
         alert("Erro ao calcular financiamento. Verifique os dados.");
